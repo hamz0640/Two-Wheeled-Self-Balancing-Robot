@@ -2,7 +2,6 @@
 
 > **HTX Physics A — Independent Project**  
 > Hamza Alomari · 3.B · Frederikshavn Teknisk Gymnasium  
-> Supervisor: Kasper Weirum Risgaard · March–April 2026
 
 A two-wheeled self-balancing robot modelled as an **inverted pendulum**, controlled by a **PID regulator** and driven by sensor fusion from a **MPU-6050/9250 IMU** using a complementary filter.
 
@@ -13,18 +12,26 @@ A two-wheeled self-balancing robot modelled as an **inverted pendulum**, control
 The robot is an inverted pendulum. Using **Lagrangian mechanics**, the equation of motion for the system is derived as:
 
 ```
-θ̈ = (mg·lc / I) · sin(θ)
+$$
+\ddot{\theta}=\frac{m g l_c}{I}\sin(\theta)
+$$
 ```
 
 For small angles (`|θ| ≲ 15°`), this linearises to:
 
 ```
-θ̈ = (mg·lc / I) · θ
+$$
+\ddot{\theta}=\frac{m g l_c}{I}\theta
+$$
 ```
 
-The general solution shows exponential growth with growth rate `λ = √(mg·lc / I)`, confirming the system is **inherently unstable** and requires active control.
+The general solution shows exponential growth with growth rate 
+$$
+\lambda=\sqrt{\frac{m g l_c}{I}}
+$$
+, confirming the system is **inherently unstable** and requires active control.
 
-For a robot with `l = 0.20 m`, the tilt angle doubles approximately every **0.14 s** — demanding a fast-reacting controller.
+For a robot with `$l=0.20\ \text{m}$`, the tilt angle doubles approximately every **0.14 s** — demanding a fast-reacting controller.
 
 ---
 
