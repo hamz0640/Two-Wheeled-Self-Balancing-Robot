@@ -20,9 +20,7 @@ $$
 For small angles (`|θ| ≲ 15°`), this linearises to:
 
 ```
-$$
-\ddot{\theta}=\frac{m g l_c}{I}\theta
-$$
+$\ddot{\theta}=\frac{m g l_c}{I}\theta$
 ```
 
 The general solution shows exponential growth with growth rate 
