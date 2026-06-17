@@ -66,7 +66,7 @@ void loop() {
   // Accelerometer angle
   accelAngle = atan2(ay_g, az_g) * 180.0 / PI;
 
-  // Gyroscope angle (integration – drifts over time)
+  // Gyroscope angle 
   gyroAngle += gx_dps * dt;
 
   // Complementary filter (α = 0.98)
