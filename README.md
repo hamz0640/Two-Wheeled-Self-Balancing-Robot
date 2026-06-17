@@ -3,33 +3,27 @@
 > **HTX Physics A — Independent Project**  
 > Hamza Alomari · 3.B · Frederikshavn Teknisk Gymnasium  
 
-A two-wheeled self-balancing robot modelled as an **inverted pendulum**, controlled by a **PID regulator** and driven by sensor fusion from a **MPU-6050/9250 IMU** using a complementary filter.
+A two-wheeled self-balancing robot modelled as an inverted pendulum, controlled by a PID regulator and driven by sensor fusion from a **MPU-6050/9250 IMU** using a complementary filter.
 
 ---
 
 ## Physics Overview
 
-The robot is an inverted pendulum. Using **Lagrangian mechanics**, the equation of motion for the system is derived as:
+The robot is an inverted pendulum. Using Lagrangian mechanics, the equation of motion for the system is derived as:
 
 ```
-$$
-\ddot{\theta}=\frac{m g l_c}{I}\sin(\theta)
-$$
+θ̈ = (mg·lc / I) · sin(θ)
 ```
 
 For small angles (`|θ| ≲ 15°`), this linearises to:
 
 ```
-$\ddot{\theta}=\frac{m g l_c}{I}\theta$
+θ̈ = (mg·lc / I) · θ
 ```
 
-The general solution shows exponential growth with growth rate 
-$$
-\lambda=\sqrt{\frac{m g l_c}{I}}
-$$
-, confirming the system is **inherently unstable** and requires active control.
+The general solution shows exponential growth with growth rate `λ = √(mg·lc / I)`, confirming the system is inherently unstable and requires active control.
 
-For a robot with `$l=0.20\ \text{m}$`, the tilt angle doubles approximately every **0.14 s** — demanding a fast-reacting controller.
+For a robot with `l = 0.20 m`, the tilt angle doubles approximately every 0.14 s — demanding a fast-reacting controller.
 
 ---
 
@@ -90,11 +84,11 @@ Three angle estimation methods were compared at a known angle of `0.06°`:
 
 - **Gyroscope only** → linear drift accumulates over time (integration error)
 - **Accelerometer only** → noisy but stable around the true angle
-- **Complementary filter (α = 0.98)** → closely tracks the real angle ✅
+- **Complementary filter (α = 0.98)** → closely tracks the real angle 
 
 ### Experiment 2 — PID Tuning
 
-With the tuned PID parameters, the robot maintained stable upright balance with oscillations of **±2°** around the setpoint (0°).
+With the tuned PID parameters, the robot maintained stable upright balance with oscillations of ±2° around the setpoint (0°).
 
 ### Experiment 3 — Maximum Recovery Angle
 
@@ -102,42 +96,16 @@ The robot was manually tilted to various angles and released:
 
 | Disturbance | Outcome |
 |-------------|---------|
-| 2.5° | ✅ Recovered |
-| 3.0° | ✅ Recovered |
-| 15.5° | ✅ Recovered |
-| 20.0° | ❌ Fell over |
+| 2.5° | Recovered |
+| 3.0° | Recovered |
+| 15.5° | Recovered |
+| 20.0° | Fell over |
 
-**Maximum recovery angle: `15° < θ_max < 20°`**
+Maximum recovery angle: `15° < θ_max < 20°`
 
 At 20°+, the non-linear term `sin(θ)` dominates and the linearised PID model breaks down, causing exponential divergence.
 
 ---
-
-## Getting Started
-
-### Prerequisites
-
-- [Arduino IDE](https://www.arduino.cc/en/software)
-- Arduino Nano (or compatible board)
-- MPU-6050 or MPU-9250 IMU
-- L298N motor driver + 2× DC motors
-
-### Upload
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/self-balancing-robot.git
-   ```
-
-2. Open `src/imu_characterization/imu_characterization.ino` in Arduino IDE.
-
-3. Select **Arduino Nano** and the correct COM port.
-
-4. Upload and open the Serial Monitor at **115200 baud**.
-
-5. Once the IMU is verified, upload `src/balance_controller/balance_controller.ino`.
-
-6. Adjust `PITCH_OFFSET` if the robot leans slightly when stationary.
 
 ### Wiring
 
@@ -147,6 +115,7 @@ At 20°+, the non-linear term `sin(θ)` dominates and the linearised PID model b
 | GND | GND |
 | SDA | A4 |
 | SCL | A5 |
+<img width="466" height="325" alt="image" src="https://github.com/user-attachments/assets/bd9c35f6-0601-4df6-98bb-2a71ab8e529e" />
 
  **Important:** Some MPU modules have **no onboard voltage regulator** and accept **max 3.3 V**. Check your module's datasheet before connecting to 5 V.
 
