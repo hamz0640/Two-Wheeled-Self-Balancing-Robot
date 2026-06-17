@@ -1,16 +1,16 @@
 #include <Wire.h>
-
-// ── IMU (MPU-6050/9250) ───────────────────────────────────
+  
+// ── IMU (MPU-6050) ────────────────────────────────────────
 #define IMU_ADDR     0x68
 #define PWR_MGMT_1   0x6B
 #define ACCEL_XOUT_H 0x3B
 
-// ── IMU axis sign configuration ───────────────────────────
+// ── IMU axis configuration ───────────────────────────────
 #define ACC_Y_SIGN   -1.0
-#define ACC_Z_SIGN   -1.0
-#define GYRO_Y_SIGN  -1.0
+#define ACC_Z_SIGN  -1.0
+#define GYRO_Y_SIGN -1.0
 
-// ── L298N motor driver pins ───────────────────────────────
+// ── Motor driver pins ─────────────────────────────────────
 #define ENA 3
 #define IN1 6
 #define IN2 7
@@ -18,25 +18,22 @@
 #define IN3 8
 #define IN4 9
 
-// ── Tunable parameters ────────────────────────────────────
-float PITCH_OFFSET = 0.0;    // Trim for physical lean offset (degrees)
-float MOTOR_TRIM   = 0.0;    // Compensate for motor speed asymmetry
+float PITCH_OFFSET = 0.0;
+float MOTOR_TRIM   = 0.0;
 
-// PID gains  (tuned via Ziegler-Nichols)
 float Kp = 15.0;
 float Ki =  0.0;
-float Kd = 10.0;
+float Kd =  10.0;
 
-// Safety / filter constants
-const float FALL_ANGLE = 30.0;   // Stop motors beyond this angle (degrees)
-const float I_LIMIT    = 100.0;  // Anti-windup clamp on integral
-const float DEAD_BAND  =  20.0;  // Minimum PWM to overcome motor stiction
-const float CF_ALPHA   =  0.98;  // Complementary filter weight (gyro)
+const float FALL_ANGLE = 30.0;
+const float I_LIMIT    = 100.0;
+const float DEAD_BAND  = 20.0;
+const float CF_ALPHA   = 0.98;
 
 // ── PID state ─────────────────────────────────────────────
-float         pitch     = 0.0;
-float         integral  = 0.0;
-float         prevError = 0.0;
+float pitch     = 0.0;
+float integral  = 0.0;
+float prevError = 0.0;
 unsigned long lastTime;
 
 // ─────────────────────────────────────────────────────────
@@ -45,13 +42,13 @@ unsigned long lastTime;
 void imuReset() {
   Wire.beginTransmission(IMU_ADDR);
   Wire.write(PWR_MGMT_1);
-  Wire.write(0x80);          // Device reset
+  Wire.write(0x80);
   Wire.endTransmission();
   delay(150);
 
   Wire.beginTransmission(IMU_ADDR);
   Wire.write(PWR_MGMT_1);
-  Wire.write(0x00);          // Wake up
+  Wire.write(0x00);
   Wire.endTransmission();
   delay(150);
 }
@@ -66,7 +63,7 @@ int readIMU(int16_t &ax, int16_t &ay, int16_t &az,
   ax = (Wire.read() << 8) | Wire.read();
   ay = (Wire.read() << 8) | Wire.read();
   az = (Wire.read() << 8) | Wire.read();
-  Wire.read(); Wire.read();  // skip temperature bytes
+  Wire.read(); Wire.read();
   gx = (Wire.read() << 8) | Wire.read();
   gy = (Wire.read() << 8) | Wire.read();
   return 1;
@@ -106,19 +103,23 @@ void setup() {
   Wire.begin();
   Wire.setClock(400000);
   Wire.setWireTimeout(3000, true);
+
   imuReset();
 
-  // 500 ms warm-up: seed complementary filter before entering main loop
+  // Warmup
   unsigned long warmup = millis();
   while (millis() - warmup < 500) {
     int16_t ax, ay, az, gx, gy;
     if (readIMU(ax, ay, az, gx, gy)) {
+
       float ayg = (ay / 16384.0) * ACC_Y_SIGN;
       float azg = (az / 16384.0) * ACC_Z_SIGN;
-      float gys = (gy /   131.0) * GYRO_Y_SIGN;
+      float gys = (gy / 131.0)   * GYRO_Y_SIGN;
 
       float accPitch = atan2(ayg, azg) * 57.2958;
-      pitch = 0.98f * (pitch + gys * 0.005f) + 0.02f * accPitch;
+
+      pitch = 0.98f * (pitch + gys * 0.005f)
+            + 0.02f * accPitch;
     }
     delay(5);
   }
@@ -128,30 +129,36 @@ void setup() {
 }
 
 // ─────────────────────────────────────────────────────────
-// Main control loop  (~10 ms / iteration target)
+// Main loop
 // ─────────────────────────────────────────────────────────
 void loop() {
   unsigned long now = millis();
   float dt = (now - lastTime) / 1000.0;
   lastTime = now;
 
-  // Guard against scheduler jitter / stale reads
-  if (dt < 0.002 || dt > 0.1) { stopMotors(); return; }
+  if (dt < 0.002 || dt > 0.1) {
+    stopMotors();
+    return;
+  }
 
   int16_t ax, ay, az, gx, gy;
-  if (!readIMU(ax, ay, az, gx, gy)) { stopMotors(); return; }
+  if (!readIMU(ax, ay, az, gx, gy)) {
+    stopMotors();
+    return;
+  }
 
-  // ── Complementary filter ──────────────────────────────
+  // ── Complementary filter with axis mapping ──────────────
   float ayg = (ay / 16384.0) * ACC_Y_SIGN;
   float azg = (az / 16384.0) * ACC_Z_SIGN;
-  float gys = (gy /   131.0) * GYRO_Y_SIGN;
+  float gys = (gy / 131.0)   * GYRO_Y_SIGN;
 
   float accPitch = atan2(ayg, azg) * 57.2958;
-  pitch = CF_ALPHA * (pitch + gys * dt) + (1.0 - CF_ALPHA) * accPitch;
+
+  pitch = CF_ALPHA * (pitch + gys * dt)
+        + (1.0 - CF_ALPHA) * accPitch;
 
   float error = pitch - PITCH_OFFSET;
 
-  // ── Fall detection – disable motors beyond safe range ─
   if (fabs(error) > FALL_ANGLE) {
     stopMotors();
     integral  = 0.0;
@@ -159,15 +166,13 @@ void loop() {
     return;
   }
 
-  // ── PID computation ───────────────────────────────────
-  integral   = constrain(integral + error * dt, -I_LIMIT, I_LIMIT);
+  integral  = constrain(integral + error * dt, -I_LIMIT, I_LIMIT);
   float derivative = (error - prevError) / dt;
-  prevError  = error;
+  prevError = error;
 
   float output = Kp * error + Ki * integral + Kd * derivative;
   output = constrain(output, -255, 255);
 
-  // Dead-band compensation: remap [1..255] → [DEAD_BAND..255]
   float drive = 0.0;
   if (fabs(output) >= 1.0) {
     float sign = (output > 0) ? 1.0 : -1.0;
@@ -181,10 +186,9 @@ void loop() {
     setMotors(drive, drive * trimFactor);
   }
 
-  // ── Serial telemetry (CSV: time_ms, setpoint, error) ─
-  Serial.print(now);
-  Serial.print(",");
-  Serial.print(0.0);          // setpoint
-  Serial.print(",");
-  Serial.println(error, 3);
+Serial.print(now);
+Serial.print(",");
+Serial.print(0.0);     // setpoint
+Serial.print(",");
+Serial.println(error, 3);
 }
