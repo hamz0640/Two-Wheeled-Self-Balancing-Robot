@@ -1,4 +1,4 @@
-# 🤖 Two-Wheeled Self-Balancing Robot
+# Two-Wheeled Self-Balancing Robot
 
 > **HTX Physics A — Independent Project**  
 > Hamza Alomari · 3.B · Frederikshavn Teknisk Gymnasium  
@@ -8,7 +8,7 @@ A two-wheeled self-balancing robot modelled as an **inverted pendulum**, control
 
 ---
 
-## 📐 Physics Overview
+## Physics Overview
 
 The robot is an inverted pendulum. Using **Lagrangian mechanics**, the equation of motion for the system is derived as:
 
@@ -28,28 +28,7 @@ For a robot with `l = 0.20 m`, the tilt angle doubles approximately every **0.14
 
 ---
 
-## 🧠 System Architecture
-
-```
-┌──────────────┐    I²C     ┌──────────────────────────┐
-│ MPU-6050/    │ ─────────> │      Arduino Nano        │
-│ 9250 (IMU)   │            │                          │
-└──────────────┘            │  Complementary Filter    │
-                            │         ↓                │
-                            │    PID Controller        │
-                            │         ↓                │
-                            └──────────────────────────┘
-                                       │ PWM
-                            ┌──────────▼───────────┐
-                            │   L298N Motor Driver  │
-                            └──────────┬────────────┘
-                                  ┌────┴────┐
-                               Motor A   Motor B
-```
-
----
-
-## 🔬 Sensor Fusion — Complementary Filter
+## Sensor Fusion — Complementary Filter
 
 The IMU provides two independent but flawed angle estimates:
 
@@ -68,7 +47,7 @@ With `α = 0.98`, the gyroscope dominates on fast timescales while the accelerom
 
 ---
 
-## ⚙️ PID Controller
+## PID Controller
 
 ```
 u(t) = Kp·e(t) + Ki·∫e(t)dt + Kd·(de/dt)
@@ -84,7 +63,7 @@ u(t) = Kp·e(t) + Ki·∫e(t)dt + Kd·(de/dt)
 
 ---
 
-## 📦 Hardware
+## Hardware
 
 | Component | Specification |
 |-----------|--------------|
@@ -97,30 +76,8 @@ u(t) = Kp·e(t) + Ki·∫e(t)dt + Kd·(de/dt)
 
 ---
 
-## 📁 Repository Structure
 
-```
-self-balancing-robot/
-│
-├── src/
-│   ├── imu_characterization/       # Experiment 1: IMU + complementary filter
-│   │   └── imu_characterization.ino
-│   │
-│   └── balance_controller/         # Experiments 2 & 3: PID balance control
-│       └── balance_controller.ino
-│
-├── hardware/
-│   └── schematic.png               # KiCad schematic
-│
-├── docs/
-│   └── Fysik-projekt.pdf           # Full project report (Danish)
-│
-└── README.md
-```
-
----
-
-## 🧪 Experiments & Results
+## Experiments & Results
 
 ### Experiment 1 — IMU Characterisation
 
@@ -151,7 +108,7 @@ At 20°+, the non-linear term `sin(θ)` dominates and the linearised PID model b
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -186,11 +143,11 @@ At 20°+, the non-linear term `sin(θ)` dominates and the linearised PID model b
 | SDA | A4 |
 | SCL | A5 |
 
-> ⚠️ **Important:** Some MPU modules have **no onboard voltage regulator** and accept **max 3.3 V**. Check your module's datasheet before connecting to 5 V.
+ **Important:** Some MPU modules have **no onboard voltage regulator** and accept **max 3.3 V**. Check your module's datasheet before connecting to 5 V.
 
 ---
 
-## 📊 Theory References
+## Theory References
 
 - Morin, D. (2007). *The Lagrangian Method*. Harvard Physics Department.
 - InvenSense (2012). *MPU-6050 Register Map and Descriptions, Rev. 4.0*.
@@ -200,7 +157,7 @@ At 20°+, the non-linear term `sin(θ)` dominates and the linearised PID model b
 
 ---
 
-## 📝 License
+## License
 
 MIT License — see [LICENSE](LICENSE) for details.
 
